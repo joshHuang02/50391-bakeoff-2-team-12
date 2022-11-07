@@ -19,7 +19,17 @@ final int screenPPI = 72; //what is the DPI of the screen you are using
 float logoX = 500;
 float logoY = 500;
 float logoZ = 50f;
+float halfZ = logoZ/2;
 float logoRotation = 0;
+
+// Circles to resize + rotate
+boolean cornersAppear = false;
+int radius = 12;
+float[] topRightCorner = new float[2];
+float[] topLeftCorner = new float[2];
+float[] bottomRightCorner = new float[2];
+float[] bottomLeftCorner = new float[2];
+float[] rotate = new float[2];
 
 private class Destination
 {
@@ -93,7 +103,7 @@ void draw() {
 
   //===========DRAW LOGO SQUARE=================
   pushMatrix();
-  translate(logoX, logoY); //translate draw center to the center oft he logo square
+  translate(logoX, logoY); //translate draw center to the center of the logo square
   rotate(radians(logoRotation)); //rotate using the logo square as the origin
   noStroke();
   fill(60, 60, 192, 192);
@@ -104,6 +114,24 @@ void draw() {
   fill(255);
   scaffoldControlLogic(); //you are going to want to replace this!
   text("Trial " + (trialIndex+1) + " of " +trialCount, width/2, inchToPix(.8f));
+  
+  //===========DRAW CORNER CONTROLS=================
+  if (cornersAppear) {
+    drawCorners();
+  }
+}
+
+void drawCorners()
+{
+  pushMatrix();
+  translate(logoX, logoY);
+  fill(255);
+  circle(-halfZ, -halfZ, radius);
+  circle(halfZ, halfZ, radius);
+  circle(-halfZ, halfZ, radius);
+  circle(halfZ, -halfZ, radius);
+  circle(0, -logoZ, radius);
+  popMatrix();
 }
 
 //my example design for control, which is terrible
@@ -153,6 +181,55 @@ void mousePressed()
   {
     startTime = millis();
     println("time started!");
+  }
+  // Show corners
+  if ((logoX-halfZ <= mouseX) && (mouseX <= logoX+halfZ) && (logoY-halfZ <= mouseY) && (mouseY <= logoY+halfZ)) {
+    cornersAppear = true;
+  } else {
+     cornersAppear = false;
+  }
+}
+
+float distance(float x0, float y0, float x1, float y1)
+{
+  return (float)(Math.pow(Math.pow(x0 - x1, 2) + Math.pow(y0 - y1, 2), 1/2));
+}
+void mouseDragged()
+{
+  // Rotate square / Resize square
+  if (cornersAppear) {
+    topRightCorner[0] = logoX + halfZ;
+    topRightCorner[1] = logoY - halfZ;
+    
+    bottomRightCorner[0] = logoX + halfZ;
+    bottomRightCorner[1] = logoY + halfZ;
+    
+    topLeftCorner[0] = logoX - halfZ;
+    topLeftCorner[1] = logoY - halfZ;
+    
+    bottomLeftCorner[0] = logoX - halfZ;
+    bottomLeftCorner[1] = logoY + halfZ;
+    
+    rotate[0] = logoX;
+    rotate[1] = logoY - logoZ;
+    
+    if (distance(topRightCorner[0], topRightCorner[1], mouseX, mouseY) <= radius) {
+      print("yay");
+    } else if (distance(topLeftCorner[0], topLeftCorner[1], mouseX, mouseY) <= radius) {
+      print("yay");
+    } else if (distance(topRightCorner[0], topRightCorner[1], mouseX, mouseY) <= radius) {
+      print("yay");
+    } else if (distance(bottomLeftCorner[0], bottomLeftCorner[1], mouseX, mouseY) <= radius) {
+      print("yay");
+    } else if (distance(bottomRightCorner[0], bottomRightCorner[1], mouseX, mouseY) <= radius) {
+      print("yay");
+    }
+  }
+  
+  // Move square
+  if ((logoX-halfZ <= mouseX) && (mouseX <= logoX+halfZ) && (logoY-halfZ <= mouseY) && (mouseY <= logoY+halfZ)) {
+    logoX = mouseX;
+    logoY = mouseY;
   }
 }
 
