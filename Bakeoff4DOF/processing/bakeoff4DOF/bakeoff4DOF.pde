@@ -21,7 +21,10 @@ float logoY = 350;
 float logoZ = 50f;
 float logoRotation = 0;
 
-//Addiito
+//Additional variables
+PVector base = new PVector(logoX, logoY);
+PVector opposite = new PVector(logoX + 100, logoY + 100);
+float sideLength = base.dist(opposite) / sqrt(2);
 
 private class Destination
 {
@@ -103,10 +106,12 @@ void draw() {
   
   
   // ===set where the corners should be
-  PVector base = new PVector(logoX, logoY);
-  PVector opposite = new PVector(mouseX, mouseY);
-  float sideLength = base.dist(opposite) / sqrt(2);
-  logoRotation = atan2(mouseY - logoX, mouseX - logoY) - radians(45);
+  //PVector base = new PVector(logoX, logoY);
+  //PVector opposite = new PVector(mouseX, mouseY);
+  //float sideLength = base.dist(opposite) / sqrt(2);
+  base.set(logoX, logoY);
+  opposite.set(mouseX, mouseY);
+  sideLength = base.dist(opposite) / sqrt(2);
   
   // draw base circle and opposite corner square
   fill(10, 100, 10, 256);
@@ -117,12 +122,15 @@ void draw() {
   
   // draw logo
   rectMode(CORNER);
-  translate(base.x, base.y); //translate draw center to the base corner
+  translate(logoX, logoY); //translate draw center to the base corner
+  //logoRotation = atan2(mouseY - logoY, mouseX - logoX) - radians(45);
+  logoRotation = atan2(opposite.y - base.y, opposite.x - base.x) - radians(45);
   rotate(logoRotation); //rotate using the base corner as the origin
   fill(60, 60, 192, 192);
   rect(0, 0, sideLength, sideLength);
-  popMatrix();
   rectMode(CENTER);
+  
+  popMatrix();
 
   //===========DRAW EXAMPLE CONTROLS=================
   fill(255);
