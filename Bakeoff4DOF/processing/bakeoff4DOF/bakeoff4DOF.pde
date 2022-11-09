@@ -24,7 +24,10 @@ float logoRotation = 0;
 //Additional variables
 PVector base = new PVector(logoX, logoY);
 PVector opposite = new PVector(logoX + 100, logoY + 100);
+PVector center = new PVector((base.x + opposite.x) / 2, (base.y + opposite.y) / 2);
 float sideLength = base.dist(opposite) / sqrt(2);
+boolean dragBase = false;
+boolean dragOpp = false;
 
 private class Destination
 {
@@ -42,6 +45,8 @@ void setup() {
   textFont(createFont("Arial", inchToPix(.3f))); //sets the font to Arial that is 0.3" tall
   textAlign(CENTER);
   rectMode(CENTER); //draw rectangles not from upper left, but from the center outwards
+  
+  frameRate(30);
   
   //don't change this! 
   border = inchToPix(2f); //padding of 1.0 inches
@@ -97,6 +102,7 @@ void draw() {
   }
 
   //===========DRAW LOGO SQUARE=================
+  
   pushMatrix();
 
 
@@ -109,21 +115,22 @@ void draw() {
   //PVector base = new PVector(logoX, logoY);
   //PVector opposite = new PVector(mouseX, mouseY);
   //float sideLength = base.dist(opposite) / sqrt(2);
-  base.set(logoX, logoY);
-  opposite.set(mouseX, mouseY);
+  controlls();
+  //base.set(logoX, logoY);
+  //opposite.set(mouseX, mouseY);
   sideLength = base.dist(opposite) / sqrt(2);
   
+  
   // draw base circle and opposite corner square
-  fill(10, 100, 10, 256);
+  fill(10, 100, 10, 70);
   circle(base.x, base.y, 20);
   rectMode(CENTER);
-  fill(100, 10, 10, 256);
+  fill(100, 10, 10, 70);
   rect(opposite.x, opposite.y, 20, 20);
   
   // draw logo
   rectMode(CORNER);
-  translate(logoX, logoY); //translate draw center to the base corner
-  //logoRotation = atan2(mouseY - logoY, mouseX - logoX) - radians(45);
+  translate(base.x, base.y); //translate draw center to the base corner
   logoRotation = atan2(opposite.y - base.y, opposite.x - base.x) - radians(45);
   rotate(logoRotation); //rotate using the base corner as the origin
   fill(60, 60, 192, 192);
@@ -134,10 +141,21 @@ void draw() {
 
   //===========DRAW EXAMPLE CONTROLS=================
   fill(255);
-  scaffoldControlLogic(); //you are going to want to replace this!
+  
+  //scaffoldControlLogic(); //you are going to want to replace this!
   text("Trial " + (trialIndex+1) + " of " +trialCount, width/2, inchToPix(.8f));
 }
 
+void controlls() {
+  // drag corners
+  if (dragBase){
+    base.set(mouseX, mouseY);
+    opposite.set(opposite.x + mouseX - pmouseX, opposite.y + mouseY - pmouseY);
+  }
+  if (dragOpp) {
+    opposite.set(mouseX, mouseY);
+  }
+}
 //my example design for control, which is terrible
 void scaffoldControlLogic()
 {
@@ -186,11 +204,25 @@ void mousePressed()
     startTime = millis();
     println("time started!");
   }
+  
+  // test press base corner
+  if (dist(base.x, base.y, mouseX, mouseY) < 20) {
+    dragBase = true;
+  }
+  // test opposite corner
+  if (mouseX > opposite.x & mouseX < opposite.x+sideLength & mouseY > opposite.y & mouseY < opposite.y + sideLength) {
+    dragOpp = true;
+  }
 }
 
 void mouseReleased()
 {
+  // stop dragging any corner
+  dragBase = false;
+  dragOpp = false;
+  
   //check to see if user clicked middle of screen within 3 inches, which this code uses as a submit button
+  /*
   if (dist(width/2, height/2, mouseX, mouseY)<inchToPix(3f))
   {
     if (userDone==false && !checkForSuccess())
@@ -204,9 +236,14 @@ void mouseReleased()
       finishTime = millis();
     }
   }
+  */
 }
 
 //probably shouldn't modify this, but email me if you want to for some good reason.
+/* to get center of square
+xCenter = (x1 + x2) / 2
+yCenter = (y1 + y2) / 2
+*/
 public boolean checkForSuccess()
 {
   Destination d = destinations.get(trialIndex);	
