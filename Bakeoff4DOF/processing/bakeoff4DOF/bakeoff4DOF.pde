@@ -16,10 +16,12 @@ final int screenPPI = 72; //what is the DPI of the screen you are using
 //you can test this by drawing a 72x72 pixel rectangle in code, and then confirming with a ruler it is 1x1 inch. 
 
 //These variables are for my example design. Your input code should modify/replace these!
-float logoX = 500;
-float logoY = 500;
+float logoX = 200;
+float logoY = 200;
 float logoZ = 50f;
 float logoRotation = 0;
+
+//Addiito
 
 private class Destination
 {
@@ -93,19 +95,32 @@ void draw() {
 
   //===========DRAW LOGO SQUARE=================
   pushMatrix();
-  logoRotation = atan2(mouseY - logoX, mouseX - logoY);
+
 
   //translate(logoX, logoY); //translate draw center to the center oft he logo square
-  rotate(logoRotation); //rotate using the logo square as the origin
+  //rotate(logoRotation); //rotate using the logo square as the origin
   noStroke();
-  fill(60, 60, 192, 192);
   
-  //rect(0, 0, logoX, logoY);
+  
+  // ===set where the corners should be
   PVector base = new PVector(logoX, logoY);
   PVector opposite = new PVector(mouseX, mouseY);
-  float sideLength = base.dist(opposite);
+  float sideLength = base.dist(opposite) / sqrt(2);
+  logoRotation = atan2(mouseY - logoX, mouseX - logoY) - radians(45);
+  
+  // draw base circle and opposite corner square
+  fill(10, 100, 10, 256);
+  circle(base.x, base.y, 20);
+  rectMode(CENTER);
+  fill(100, 10, 10, 256);
+  rect(opposite.x, opposite.y, 20, 20);
+  
+  // draw logo
   rectMode(CORNER);
-  rect(base.x, base.y, sideLength, sideLength);
+  translate(base.x, base.y); //translate draw center to the base corner
+  rotate(logoRotation); //rotate using the base corner as the origin
+  fill(60, 60, 192, 192);
+  rect(0, 0, sideLength, sideLength);
   popMatrix();
   rectMode(CENTER);
 
