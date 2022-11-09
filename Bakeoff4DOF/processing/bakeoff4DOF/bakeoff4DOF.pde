@@ -28,6 +28,8 @@ PVector center = new PVector((base.x + opposite.x) / 2, (base.y + opposite.y) / 
 float sideLength = base.dist(opposite) / sqrt(2);
 boolean dragBase = false;
 boolean dragOpp = false;
+int cornerSize = 30;
+float mouseOffSet = 10;
 
 private class Destination
 {
@@ -45,8 +47,6 @@ void setup() {
   textFont(createFont("Arial", inchToPix(.3f))); //sets the font to Arial that is 0.3" tall
   textAlign(CENTER);
   rectMode(CENTER); //draw rectangles not from upper left, but from the center outwards
-  
-  frameRate(30);
   
   //don't change this! 
   border = inchToPix(2f); //padding of 1.0 inches
@@ -102,99 +102,72 @@ void draw() {
   }
 
   //===========DRAW LOGO SQUARE=================
-  
   pushMatrix();
 
-
-  //translate(logoX, logoY); //translate draw center to the center oft he logo square
-  //rotate(logoRotation); //rotate using the logo square as the origin
-  noStroke();
+  // controlls for dragging corners, conditions set in mousePressed() and mouseReleased()
+  if (dragBase){
+    // moves the base and opposite equally
+    base.set(mouseX - mouseOffSet, mouseY - mouseOffSet);
+    opposite.set(opposite.x + mouseX - pmouseX, opposite.y + mouseY - pmouseY);
+    // dont let corner go off screen becaues then you can't drag it
+    if (base.x < 0) {base.x = 0;}
+    if (base.y < 0) {base.y = 0;}
+    if (base.x > width) {base.x = width;}
+    if (base.y > height) {base.y = height;}
+  }
+  if (dragOpp) {
+    // moves the opposite without moving the base to change size and retation
+    opposite.set(mouseX - mouseOffSet, mouseY - mouseOffSet);
+    // dont let corner go off screen becaues then you can't drag it
+    if (opposite.x < 0) {opposite.x = 0;}
+    if (opposite.y < 0) {opposite.y = 0;}
+    if (opposite.x > width) {opposite.x = width;}
+    if (opposite.y > height) {opposite.y = height;}
+  }
   
-  
-  // ===set where the corners should be
-  //PVector base = new PVector(logoX, logoY);
-  //PVector opposite = new PVector(mouseX, mouseY);
-  //float sideLength = base.dist(opposite) / sqrt(2);
-  controlls();
-  //base.set(logoX, logoY);
-  //opposite.set(mouseX, mouseY);
+  // set sidelength for drawing logo
   sideLength = base.dist(opposite) / sqrt(2);
   
-  
   // draw base circle and opposite corner square
+  stroke(3);
+  stroke(200, 200, 200);
   fill(10, 100, 10, 70);
-  circle(base.x, base.y, 20);
+  circle(base.x, base.y, cornerSize);
   rectMode(CENTER);
   fill(100, 10, 10, 70);
-  rect(opposite.x, opposite.y, 20, 20);
+  rect(opposite.x, opposite.y, cornerSize, cornerSize);
+  
+  // set center for validation
+  center.set((base.x + opposite.x) / 2, (base.y + opposite.y) / 2);
+  circle(center.x, center.y, 15);
   
   // draw logo
+  noStroke();
+  fill(60, 60, 192, 192);
   rectMode(CORNER);
   translate(base.x, base.y); //translate draw center to the base corner
-  logoRotation = atan2(opposite.y - base.y, opposite.x - base.x) - radians(45);
+  logoRotation = atan2(opposite.y - base.y, opposite.x - base.x) - radians(45); // find angle between base and opposite corner
   rotate(logoRotation); //rotate using the base corner as the origin
-  fill(60, 60, 192, 192);
-  rect(0, 0, sideLength, sideLength);
-  rectMode(CENTER);
+  rect(0, 0, sideLength, sideLength); // draw square at translated draw center
+  rectMode(CENTER); // reset rectMode
   
   popMatrix();
 
-  //===========DRAW EXAMPLE CONTROLS=================
+  //===========DRAW SUBMIT BUTTON=================
   fill(255);
   
-  //scaffoldControlLogic(); //you are going to want to replace this!
+  rectMode(CORNER);
+  fill(100,100,100,200);
+  rect(0,0,100, 60);
+  fill(256, 256, 256, 256);
+  text("NEXT", 50, 37);
+  
   text("Trial " + (trialIndex+1) + " of " +trialCount, width/2, inchToPix(.8f));
 }
 
 void controlls() {
   // drag corners
-  if (dragBase){
-    base.set(mouseX, mouseY);
-    opposite.set(opposite.x + mouseX - pmouseX, opposite.y + mouseY - pmouseY);
-  }
-  if (dragOpp) {
-    opposite.set(mouseX, mouseY);
-  }
-}
-//my example design for control, which is terrible
-void scaffoldControlLogic()
-{
-  //upper left corner, rotate counterclockwise
-  text("CCW", inchToPix(.4f), inchToPix(.4f));
-  if (mousePressed && dist(0, 0, mouseX, mouseY)<inchToPix(.8f))
-    logoRotation--;
-
-  //upper right corner, rotate clockwise
-  text("CW", width-inchToPix(.4f), inchToPix(.4f));
-  if (mousePressed && dist(width, 0, mouseX, mouseY)<inchToPix(.8f))
-    logoRotation++;
-
-  //lower left corner, decrease Z
-  text("-", inchToPix(.4f), height-inchToPix(.4f));
-  if (mousePressed && dist(0, height, mouseX, mouseY)<inchToPix(.8f))
-    logoZ = constrain(logoZ-inchToPix(.02f), .01, inchToPix(4f)); //leave min and max alone!
-
-  //lower right corner, increase Z
-  text("+", width-inchToPix(.4f), height-inchToPix(.4f));
-  if (mousePressed && dist(width, height, mouseX, mouseY)<inchToPix(.8f))
-    logoZ = constrain(logoZ+inchToPix(.02f), .01, inchToPix(4f)); //leave min and max alone! 
-
-  //left middle, move left
-  text("left", inchToPix(.4f), height/2);
-  if (mousePressed && dist(0, height/2, mouseX, mouseY)<inchToPix(.8f))
-    logoX-=inchToPix(.02f);
-
-  text("right", width-inchToPix(.4f), height/2);
-  if (mousePressed && dist(width, height/2, mouseX, mouseY)<inchToPix(.8f))
-    logoX+=inchToPix(.02f);
-
-  text("up", width/2, inchToPix(.4f));
-  if (mousePressed && dist(width/2, 0, mouseX, mouseY)<inchToPix(.8f))
-    logoY-=inchToPix(.02f);
-
-  text("down", width/2, height-inchToPix(.4f));
-  if (mousePressed && dist(width/2, height, mouseX, mouseY)<inchToPix(.8f))
-    logoY+=inchToPix(.02f);
+  
 }
 
 void mousePressed()
@@ -210,7 +183,7 @@ void mousePressed()
     dragBase = true;
   }
   // test opposite corner
-  if (mouseX > opposite.x & mouseX < opposite.x+sideLength & mouseY > opposite.y & mouseY < opposite.y + sideLength) {
+  if (dist(opposite.x, opposite.y, mouseX, mouseY) < 20) {
     dragOpp = true;
   }
 }
@@ -221,9 +194,8 @@ void mouseReleased()
   dragBase = false;
   dragOpp = false;
   
-  //check to see if user clicked middle of screen within 3 inches, which this code uses as a submit button
-  /*
-  if (dist(width/2, height/2, mouseX, mouseY)<inchToPix(3f))
+  //check if click next
+  if (mouseX < 100 && mouseY < 60)
   {
     if (userDone==false && !checkForSuccess())
       errorCount++;
@@ -236,14 +208,9 @@ void mouseReleased()
       finishTime = millis();
     }
   }
-  */
 }
 
 //probably shouldn't modify this, but email me if you want to for some good reason.
-/* to get center of square
-xCenter = (x1 + x2) / 2
-yCenter = (y1 + y2) / 2
-*/
 public boolean checkForSuccess()
 {
   Destination d = destinations.get(trialIndex);	
