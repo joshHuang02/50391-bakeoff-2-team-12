@@ -16,12 +16,14 @@ final int screenPPI = 72; //what is the DPI of the screen you are using
 //you can test this by drawing a 72x72 pixel rectangle in code, and then confirming with a ruler it is 1x1 inch. 
 
 //These variables are for my example design. Your input code should modify/replace these!
-float logoX = 450;
-float logoY = 350;
+float logoX = 200;
+float logoY = 200;
 float logoZ = 50f;
 float logoRotation = 0;
 
-//Addiito
+//Additional variables
+PVector base = new PVector(logoX, logoY);
+PVector opposite = new PVector(mouseX, mouseY);
 
 private class Destination
 {
@@ -103,10 +105,10 @@ void draw() {
   
   
   // ===set where the corners should be
-  PVector base = new PVector(logoX, logoY);
-  PVector opposite = new PVector(mouseX, mouseY);
+  base.set(logoX, logoY);
+  opposite.set(mouseX, mouseY);
   float sideLength = base.dist(opposite) / sqrt(2);
-  logoRotation = atan2(mouseY - logoX, mouseX - logoY) - radians(45);
+  logoRotation = atan2(opposite.y - base.x, opposite.x - base.y) - radians(45);
   
   // draw base circle and opposite corner square
   fill(10, 100, 10, 256);
