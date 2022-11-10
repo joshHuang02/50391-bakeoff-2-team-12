@@ -22,6 +22,7 @@ float logoZ = 50f;
 float logoRotation = 0;
 
 //Additional variables
+boolean debug = false;
 PVector base = new PVector(logoX, logoY);
 PVector opposite = new PVector(logoX + 100, logoY + 100);
 PVector center = new PVector((base.x + opposite.x) / 2, (base.y + opposite.y) / 2);
@@ -30,6 +31,8 @@ boolean dragBase = false;
 boolean dragOpp = false;
 int cornerSize = 30;
 float mouseOffSet = 10;
+String match = "";
+boolean success = false;
 
 private class Destination
 {
@@ -88,6 +91,7 @@ void draw() {
   for (int i=trialIndex; i<trialCount; i++) // reduces over time
   {
     pushMatrix();
+    rectMode(CENTER);
     Destination d = destinations.get(i); //get destination trial
     translate(d.x, d.y); //center the drawing coordinates to the center of the destination trial
     rotate(radians(d.rotation)); //rotate around the origin of the destination trial
@@ -130,44 +134,60 @@ void draw() {
   
   // draw base circle and opposite corner square
   stroke(3);
-  stroke(200, 200, 200);
-  fill(10, 100, 10, 70);
+  stroke(10, 100, 10);
+  fill(10, 100, 10, 60);
   circle(base.x, base.y, cornerSize);
   rectMode(CENTER);
-  fill(100, 10, 10, 70);
+  stroke(100, 10, 10);
+  fill(100, 10, 10, 60);
   rect(opposite.x, opposite.y, cornerSize, cornerSize);
   
-  // set center for validation
+  // set location of the logo for internal logic
   center.set((base.x + opposite.x) / 2, (base.y + opposite.y) / 2);
   circle(center.x, center.y, 15);
+  logoX = center.x;
+  logoY = center.y;
+  logoZ = sideLength;
   
   // draw logo
   noStroke();
   fill(60, 60, 192, 192);
   rectMode(CORNER);
   translate(base.x, base.y); //translate draw center to the base corner
-  logoRotation = atan2(opposite.y - base.y, opposite.x - base.x) - radians(45); // find angle between base and opposite corner
-  rotate(logoRotation); //rotate using the base corner as the origin
+  logoRotation = degrees(atan2(opposite.y - base.y, opposite.x - base.x) - PI/4); // find angle between base and opposite corner
+  rotate(radians(logoRotation)); //rotate using the base corner as the origin
   rect(0, 0, sideLength, sideLength); // draw square at translated draw center
   rectMode(CENTER); // reset rectMode
   
   popMatrix();
+  
+  //===========TEXT==================
+  
+  text("Trial " + (trialIndex+1) + " of " +trialCount, width/2, inchToPix(.8f));
+  success = checkForSuccess();
+  if (debug) {
+    textFont(createFont("Arial", inchToPix(.2f)));
+    textAlign(LEFT);
+    text(match, 0, 100);
+    textFont(createFont("Arial", inchToPix(.3f))); //sets the font to Arial that is 0.3" tall
+    textAlign(CENTER);
+  }
 
   //===========DRAW SUBMIT BUTTON=================
   fill(255);
   
   rectMode(CORNER);
-  fill(100,100,100,200);
-  rect(0,0,100, 60);
-  fill(256, 256, 256, 256);
-  text("NEXT", 50, 37);
-  
-  text("Trial " + (trialIndex+1) + " of " +trialCount, width/2, inchToPix(.8f));
-}
-
-void controlls() {
-  // drag corners
-  
+  if (success) {
+    fill(100,200,100,200);
+    rect(0,0,100, 60);
+    fill(256, 256, 256, 256);
+    text("NEXT", 50, 37);
+  } else {
+    fill(100,100,100,200);
+    rect(0,0,100, 60);
+    fill(256, 256, 256, 256);
+    text("NEXT", 50, 37);
+  }
 }
 
 void mousePressed()
@@ -179,12 +199,10 @@ void mousePressed()
   }
   
   // test press base corner
-  if (dist(base.x, base.y, mouseX, mouseY) < 20) {
-    dragBase = true;
-  }
-  // test opposite corner
-  if (dist(opposite.x, opposite.y, mouseX, mouseY) < 20) {
+  if (dist(opposite.x, opposite.y, mouseX, mouseY) < cornerSize) {
     dragOpp = true;
+  } else if (dist(base.x, base.y, mouseX, mouseY) < cornerSize) {
+    dragBase = true;
   }
 }
 
@@ -195,7 +213,7 @@ void mouseReleased()
   dragOpp = false;
   
   //check if click next
-  if (mouseX < 100 && mouseY < 60)
+  if (success && mouseX < 100 && mouseY < 60)
   {
     if (userDone==false && !checkForSuccess())
       errorCount++;
@@ -218,10 +236,12 @@ public boolean checkForSuccess()
   boolean closeRotation = calculateDifferenceBetweenAngles(d.rotation, logoRotation)<=5;
   boolean closeZ = abs(d.z - logoZ)<inchToPix(.1f); //has to be within +-0.1"	
 
-  println("Close Enough Distance: " + closeDist + " (logo X/Y = " + d.x + "/" + d.y + ", destination X/Y = " + logoX + "/" + logoY +")");
-  println("Close Enough Rotation: " + closeRotation + " (rot dist="+calculateDifferenceBetweenAngles(d.rotation, logoRotation)+")");
-  println("Close Enough Z: " +  closeZ + " (logo Z = " + d.z + ", destination Z = " + logoZ +")");
-  println("Close enough all: " + (closeDist && closeRotation && closeZ));
+  match = "";
+  match += "Close Enough Distance: " + closeDist + " (logo X/Y = " + d.x + "/" + d.y + ", destination X/Y = " + logoX + "/" + logoY +")\n";
+  match += "Close Enough Rotation: " + closeRotation + " (rot dist="+calculateDifferenceBetweenAngles(d.rotation, logoRotation)+")" + d.rotation + ":" + logoRotation + "\n";
+  match += ("Close Enough Z: " +  closeZ + " (logo Z = " + d.z + ", destination Z = " + logoZ +")\n");
+  match += ("Close enough all: " + (closeDist && closeRotation && closeZ) + "\n");
+  println(match);
 
   return closeDist && closeRotation && closeZ;
 }
