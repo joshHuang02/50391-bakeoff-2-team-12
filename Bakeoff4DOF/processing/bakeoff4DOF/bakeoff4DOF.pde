@@ -22,15 +22,16 @@ float logoZ = 50f;
 float logoRotation = 0;
 
 //Additional variables
-boolean debug = false;
+boolean debug = true;
 PVector base = new PVector(logoX, logoY);
-PVector opposite = new PVector(logoX + 100, logoY + 100);
-PVector center = new PVector((base.x + opposite.x) / 2, (base.y + opposite.y) / 2);
-float sideLength = base.dist(opposite) / sqrt(2);
+PVector corner = new PVector(logoX + 100, logoY + 100);
+PVector center = new PVector((base.x + corner.x) / 2, (base.y + corner.y) / 2);
+float sideLength = base.dist(corner) / sqrt(2);
 boolean dragBase = false;
-boolean dragOpp = false;
+boolean dragCorner = false;
 int indicatorSize = 20;
-float mouseOffSet = 0;
+float offSetX = 0;
+float offSetY = 0;
 String match = "";
 boolean closeDist = false;
 boolean closeRotation = false;
@@ -97,15 +98,36 @@ void draw() {
     rectMode(CENTER);
     Destination d = destinations.get(i); //get destination trial
     translate(d.x, d.y); //center the drawing coordinates to the center of the destination trial
-    rotate(radians(d.rotation)); //rotate around the origin of the destination trial
+    
     noFill();
     strokeWeight(3f);
-    if (trialIndex==i)
-      stroke(255, 0, 0, 192); //set color to semi translucent
-    else
+    if (trialIndex==i) { // if is target
+      // draw square
+      stroke(255, 0, 0, 192); //set target square always red
+      rotate(radians(d.rotation)); //rotate around the origin of the destination trial
+      rect(0, 0, d.z, d.z);
+      
+      //draw indicators
+      stroke(255, 0, 0, 100); //set indicators more transparent
+      // draw corner indicators if there is room (draw after rotate)
+      if (d.z > indicatorSize) {
+        float halfLen = d.z/2;
+        circle(halfLen, halfLen, indicatorSize);
+        circle(halfLen, -halfLen, indicatorSize);
+        circle(-halfLen, halfLen, indicatorSize);
+        circle(-halfLen, -halfLen, indicatorSize);
+      }
+      // draw center cross
+      rotate(radians(-d.rotation)); // counter rotate cross to match with logo
+      line(0 - indicatorSize/2, 0, 0 + indicatorSize/2, 0);
+      line(0, 0 - indicatorSize/2, 0, 0 + indicatorSize/2);
+      
+    } else { // if not target
+      rotate(radians(d.rotation)); //rotate around the origin of the destination trial
       stroke(128, 128, 128, 128); //set color to semi translucent
-    rect(0, 0, d.z, d.z);
-    popMatrix();
+      rect(0, 0, d.z, d.z);
+    }
+      popMatrix();
   }
 
   //===========DRAW LOGO SQUARE=================
@@ -113,41 +135,39 @@ void draw() {
 
   // controlls for dragging corners, conditions set in mousePressed() and mouseReleased()
   if (dragBase){
-    // moves the base and opposite equally
-    base.set(mouseX - mouseOffSet, mouseY - mouseOffSet);
-    opposite.set(opposite.x + mouseX - pmouseX, opposite.y + mouseY - pmouseY);
+    // moves the base and corner equally
+    base.set(mouseX - offSetX, mouseY - offSetY);
+    corner.set(corner.x + mouseX - pmouseX, corner.y + mouseY - pmouseY);
     // dont let corner go off screen becaues then you can't drag it
     if (base.x < 0) {base.x = 0;}
     if (base.y < 0) {base.y = 0;}
     if (base.x > width) {base.x = width;}
     if (base.y > height) {base.y = height;}
   }
-  if (dragOpp) {
-    // moves the opposite without moving the base to change size and retation
-    opposite.set(mouseX - mouseOffSet, mouseY - mouseOffSet);
+  if (dragCorner) {
+    // moves the corner without moving the base to change size and retation
+    corner.set(mouseX - offSetX, mouseY - offSetY);
     // dont let corner go off screen becaues then you can't drag it
-    if (opposite.x < 0) {opposite.x = 0;}
-    if (opposite.y < 0) {opposite.y = 0;}
-    if (opposite.x > width) {opposite.x = width;}
-    if (opposite.y > height) {opposite.y = height;}
+    if (corner.x < 0) {corner.x = 0;}
+    if (corner.y < 0) {corner.y = 0;}
+    if (corner.x > width) {corner.x = width;}
+    if (corner.y > height) {corner.y = height;}
   }
   
   // set sidelength for drawing logo
-  sideLength = 2 * base.dist(opposite) / sqrt(2);
+  sideLength = 2 * base.dist(corner) / sqrt(2);
   
   // set location of the logo for internal logic
-  //center.set((base.x + opposite.x) / 2, (base.y + opposite.y) / 2);
-  //circle(center.x, center.y, 15);
   logoX = base.x;
   logoY = base.y;
   logoZ = sideLength;
   
   // draw logo
   noStroke();
-  fill(60, 60, 192, 192);
+  fill(60, 60, 192, 150);
   //rectMode(CORNER);
   translate(base.x, base.y); //translate draw center to the base corner
-  logoRotation = degrees(atan2(opposite.y - base.y, opposite.x - base.x) - PI/4); // find angle between base and opposite corner
+  logoRotation = degrees(atan2(corner.y - base.y, corner.x - base.x) - PI/4); // find angle between base and corner corner
   rotate(radians(logoRotation)); //rotate using the base corner as the origin
   rect(0, 0, sideLength, sideLength); // draw square at translated draw center
   //rectMode(CENTER); // reset rectMode
@@ -158,26 +178,25 @@ void draw() {
   stroke(3);
   fill(0,0,0,0);
   if (closeRotation && closeZ) {
-    stroke(0, 255, 0, 160);
+    stroke(0, 255, 0, 250);
   } else {
-    stroke(255, 0, 0, 160);
+    stroke(255, 255, 0, 250);
   }
-  circle(opposite.x, opposite.y, indicatorSize); //draw 
+  circle(corner.x, corner.y, indicatorSize); //draw corner drag circle
   
   if (closeDist) {
-    stroke(0, 255, 0, 160);
+    stroke(0, 255, 0, 250);
   } else {
-    stroke(255, 0, 0, 160);
+    stroke(255, 255, 0, 250);
   }
-  line(base.x - indicatorSize/2, base.y, base.x + indicatorSize/2, base.y);
+  line(base.x - indicatorSize/2, base.y, base.x + indicatorSize/2, base.y); // draw center drag crosshair
   line(base.x, base.y - indicatorSize/2, base.x, base.y + indicatorSize/2);
   
-  
-  
   //===========TEXT==================
-  
   noStroke();
+  textFont(createFont("Arial", inchToPix(.3f))); //sets the font to Arial that is 0.3" tall
   text("Trial " + (trialIndex+1) + " of " +trialCount, width/2, inchToPix(.8f));
+  
   success = checkForSuccess();
   if (debug) {
     textFont(createFont("Arial", inchToPix(.2f)));
@@ -187,21 +206,20 @@ void draw() {
     textAlign(CENTER);
   }
 
-  //===========DRAW SUBMIT BUTTON=================
-  fill(255);
+  //===========DRAW SUBMIT BUTTONS=================
   
   rectMode(CORNER);
   if (success) {
     fill(100,200,100,200);
-    rect(0,0,100, 60);
-    fill(256, 256, 256, 256);
-    text("NEXT", 50, 37);
   } else {
     fill(100,100,100,200);
-    rect(0,0,100, 60);
-    fill(256, 256, 256, 256);
-    text("NEXT", 50, 37);
   }
+  rect(0,0,100, 60);
+  rect(corner.x, corner.y -indicatorSize-30, 70, 35);
+  fill(256, 256, 256, 256);
+  text("NEXT", 50, 37);
+  text("NEXT", corner.x + 34, corner.y -indicatorSize-5);  
+
 }
 
 void mousePressed()
@@ -213,9 +231,13 @@ void mousePressed()
   }
   
   // test press base corner
-  if (dist(opposite.x, opposite.y, mouseX, mouseY) < indicatorSize) {
-    dragOpp = true;
+  if (dist(corner.x, corner.y, mouseX, mouseY) < indicatorSize) {
+    offSetX = mouseX - corner.x;
+    offSetY = mouseY - corner.y;    
+    dragCorner = true;
   } else if (dist(base.x, base.y, mouseX, mouseY) < indicatorSize) {
+    offSetX = mouseX - base.x;
+    offSetY = mouseY - base.y;  
     dragBase = true;
   }
 }
@@ -224,10 +246,10 @@ void mouseReleased()
 {
   // stop dragging any corner
   dragBase = false;
-  dragOpp = false;
+  dragCorner = false;
   
   //check if click next
-  if (success && mouseX < 100 && mouseY < 60)
+  if (success && ((mouseX < 100 && mouseY < 60) || (mouseX < corner.x + 70 && mouseX > corner.x && mouseY > corner.y -indicatorSize-30 && mouseY < corner.y -indicatorSize+5)) )
   {
     if (userDone==false && !checkForSuccess())
       errorCount++;
