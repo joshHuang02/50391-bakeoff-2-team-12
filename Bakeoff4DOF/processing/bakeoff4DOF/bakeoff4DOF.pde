@@ -22,7 +22,7 @@ float logoZ = 50f;
 float logoRotation = 0;
 
 //Additional variables
-boolean debug = true;
+boolean debug = false;
 PVector base = new PVector(logoX, logoY);
 PVector corner = new PVector(logoX + 100, logoY + 100);
 PVector center = new PVector((base.x + corner.x) / 2, (base.y + corner.y) / 2);
@@ -194,7 +194,9 @@ void draw() {
   
   //===========TEXT==================
   noStroke();
-  textFont(createFont("Arial", inchToPix(.3f))); //sets the font to Arial that is 0.3" tall
+  rectMode(CENTER);
+  fill(256, 256, 256, 256);
+  //textFont(createFont("Arial", inchToPix(3f))); //sets the font to Arial that is 0.3" tall
   text("Trial " + (trialIndex+1) + " of " +trialCount, width/2, inchToPix(.8f));
   
   success = checkForSuccess();
