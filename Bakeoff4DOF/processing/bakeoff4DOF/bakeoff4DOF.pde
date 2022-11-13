@@ -29,9 +29,12 @@ PVector center = new PVector((base.x + opposite.x) / 2, (base.y + opposite.y) / 
 float sideLength = base.dist(opposite) / sqrt(2);
 boolean dragBase = false;
 boolean dragOpp = false;
-int cornerSize = 30;
-float mouseOffSet = 10;
+int indicatorSize = 20;
+float mouseOffSet = 0;
 String match = "";
+boolean closeDist = false;
+boolean closeRotation = false;
+boolean closeZ = false;
 boolean success = false;
 
 private class Destination
@@ -130,39 +133,50 @@ void draw() {
   }
   
   // set sidelength for drawing logo
-  sideLength = base.dist(opposite) / sqrt(2);
-  
-  // draw base circle and opposite corner square
-  stroke(3);
-  stroke(10, 100, 10);
-  fill(10, 100, 10, 60);
-  circle(base.x, base.y, cornerSize);
-  rectMode(CENTER);
-  stroke(100, 10, 10);
-  fill(100, 10, 10, 60);
-  rect(opposite.x, opposite.y, cornerSize, cornerSize);
+  sideLength = 2 * base.dist(opposite) / sqrt(2);
   
   // set location of the logo for internal logic
-  center.set((base.x + opposite.x) / 2, (base.y + opposite.y) / 2);
-  circle(center.x, center.y, 15);
-  logoX = center.x;
-  logoY = center.y;
+  //center.set((base.x + opposite.x) / 2, (base.y + opposite.y) / 2);
+  //circle(center.x, center.y, 15);
+  logoX = base.x;
+  logoY = base.y;
   logoZ = sideLength;
   
   // draw logo
   noStroke();
   fill(60, 60, 192, 192);
-  rectMode(CORNER);
+  //rectMode(CORNER);
   translate(base.x, base.y); //translate draw center to the base corner
   logoRotation = degrees(atan2(opposite.y - base.y, opposite.x - base.x) - PI/4); // find angle between base and opposite corner
   rotate(radians(logoRotation)); //rotate using the base corner as the origin
   rect(0, 0, sideLength, sideLength); // draw square at translated draw center
-  rectMode(CENTER); // reset rectMode
+  //rectMode(CENTER); // reset rectMode
   
   popMatrix();
   
+  // draw logo indicators
+  stroke(3);
+  fill(0,0,0,0);
+  if (closeRotation && closeZ) {
+    stroke(0, 255, 0, 160);
+  } else {
+    stroke(255, 0, 0, 160);
+  }
+  circle(opposite.x, opposite.y, indicatorSize); //draw 
+  
+  if (closeDist) {
+    stroke(0, 255, 0, 160);
+  } else {
+    stroke(255, 0, 0, 160);
+  }
+  line(base.x - indicatorSize/2, base.y, base.x + indicatorSize/2, base.y);
+  line(base.x, base.y - indicatorSize/2, base.x, base.y + indicatorSize/2);
+  
+  
+  
   //===========TEXT==================
   
+  noStroke();
   text("Trial " + (trialIndex+1) + " of " +trialCount, width/2, inchToPix(.8f));
   success = checkForSuccess();
   if (debug) {
@@ -199,9 +213,9 @@ void mousePressed()
   }
   
   // test press base corner
-  if (dist(opposite.x, opposite.y, mouseX, mouseY) < cornerSize) {
+  if (dist(opposite.x, opposite.y, mouseX, mouseY) < indicatorSize) {
     dragOpp = true;
-  } else if (dist(base.x, base.y, mouseX, mouseY) < cornerSize) {
+  } else if (dist(base.x, base.y, mouseX, mouseY) < indicatorSize) {
     dragBase = true;
   }
 }
@@ -231,10 +245,11 @@ void mouseReleased()
 //probably shouldn't modify this, but email me if you want to for some good reason.
 public boolean checkForSuccess()
 {
-  Destination d = destinations.get(trialIndex);	
-  boolean closeDist = dist(d.x, d.y, logoX, logoY)<inchToPix(.05f); //has to be within +-0.05"
-  boolean closeRotation = calculateDifferenceBetweenAngles(d.rotation, logoRotation)<=5;
-  boolean closeZ = abs(d.z - logoZ)<inchToPix(.1f); //has to be within +-0.1"	
+  Destination d = destinations.get(trialIndex);
+  closeDist = closeRotation = closeZ = false;
+  closeDist = dist(d.x, d.y, logoX, logoY)<inchToPix(.05f); //has to be within +-0.05"
+  closeRotation = calculateDifferenceBetweenAngles(d.rotation, logoRotation)<=5;
+  closeZ = abs(d.z - logoZ)<inchToPix(.1f); //has to be within +-0.1"	
 
   match = "";
   match += "Close Enough Distance: " + closeDist + " (logo X/Y = " + d.x + "/" + d.y + ", destination X/Y = " + logoX + "/" + logoY +")\n";
