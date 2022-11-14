@@ -25,7 +25,7 @@ float logoRotation = 0;
 boolean debug = false;
 PVector base = new PVector(logoX, logoY);
 PVector corner = new PVector(logoX + 100, logoY + 100);
-PVector center = new PVector((base.x + corner.x) / 2, (base.y + corner.y) / 2);
+//PVector center = new PVector((base.x + corner.x) / 2, (base.y + corner.y) / 2);
 float sideLength = base.dist(corner) / sqrt(2);
 boolean dragBase = false;
 boolean dragCorner = false;
@@ -39,6 +39,9 @@ boolean closeZ = false;
 boolean success = false;
 float halfLen = 0;
 float tRotate = 0;
+boolean msInLogo = false;
+PVector ms = new PVector(0,0);
+boolean ready = false;
 
 private class Destination
 {
@@ -114,9 +117,9 @@ void draw() {
       stroke(255, 0, 0, 100); //set indicators more transparent
       // draw corner indicators if there is room (draw after rotate)
       
-      if (d.z > indicatorSize) {
-        halfLen = d.z/2;
-      }
+      
+      halfLen = d.z/2;
+      
       // draw center cross
       //rotate(radians(-d.rotation)); // counter rotate cross to match with logo
       //line(0 - indicatorSize/2, 0, 0 + indicatorSize/2, 0);
@@ -158,17 +161,25 @@ void draw() {
   translate(base.x, base.y);
   rotate(radians(tRotate));
   if (halfLen > indicatorSize) {
-      if (closeRotation && closeZ) {
-        stroke(0, 255, 0, 250);
-      } else {
-        stroke(255, 0, 0, 150);
-      }
-      circle(halfLen, halfLen, indicatorSize);
-      circle(halfLen, -halfLen, indicatorSize);
-      circle(-halfLen, halfLen, indicatorSize);
-      circle(-halfLen, -halfLen, indicatorSize);
+    if (closeRotation && closeZ) {
+      stroke(0, 255, 0, 250);
+    } else {
+      stroke(255, 0, 0, 150);
     }
+    circle(halfLen, halfLen, indicatorSize);
+    circle(halfLen, -halfLen, indicatorSize);
+    circle(-halfLen, halfLen, indicatorSize);
+    circle(-halfLen, -halfLen, indicatorSize);
+  }
   popMatrix();
+  
+  // code to check if mouse is inside of the logo, referenced from https://openprocessing.org/sketch/565380/
+  float dx = mouseX - base.x;
+  float dy = mouseY - base.y;
+  float nx = dx*(float)Math.cos(-logoRotation) - dy*(float)Math.sin(-logoRotation);
+  float ny = dy*(float)Math.cos(-logoRotation) + dx*(float)Math.sin(-logoRotation);
+  msInLogo = (Math.abs(nx) < sideLength / 2) && (Math.abs(ny) < sideLength / 2);
+  
   
   // draw logo indicators
   stroke(3);
@@ -179,14 +190,6 @@ void draw() {
     stroke(255, 255, 0, 250);
   }
   circle(corner.x, corner.y, indicatorSize); //draw corner drag circle
-  
-  if (closeDist) {
-    stroke(0, 255, 0, 250);
-  } else {
-    stroke(255, 255, 0, 250);
-  }
-  line(base.x - indicatorSize/2, base.y, base.x + indicatorSize/2, base.y); // draw center drag crosshair
-  line(base.x, base.y - indicatorSize/2, base.x, base.y + indicatorSize/2);
   
   pushMatrix();
   // set sidelength for drawing logo
@@ -199,15 +202,29 @@ void draw() {
   
   // draw logo
   noStroke();
-  fill(60, 60, 192, 150);
+  if (success) {
+    fill(0, 255, 0, 150);
+  } else {
+    fill(60, 60, 192, 150);
+  }
+  
   //rectMode(CORNER);
   translate(base.x, base.y); //translate draw center to the base corner
   logoRotation = degrees(atan2(corner.y - base.y, corner.x - base.x) - PI/4); // find angle between base and corner corner
   rotate(radians(logoRotation)); //rotate using the base corner as the origin
   rect(0, 0, sideLength, sideLength); // draw square at translated draw center
-  //rectMode(CENTER); // reset rectMode
+  //rectMode(CENTER); // reset rectMod
   
   popMatrix();
+  if (closeDist) {
+    stroke(0, 255, 0, 256);
+    strokeWeight(6);
+  } else {
+    stroke(255, 255, 0, 250);
+  }
+  line(base.x - indicatorSize/2, base.y, base.x + indicatorSize/2, base.y); // draw center drag crosshair
+  line(base.x, base.y - indicatorSize/2, base.x, base.y + indicatorSize/2);
+  strokeWeight(4);
   
   //===========TEXT==================
   noStroke();
@@ -253,7 +270,8 @@ void mousePressed()
     offSetX = mouseX - corner.x;
     offSetY = mouseY - corner.y;    
     dragCorner = true;
-  } else if (dist(base.x, base.y, mouseX, mouseY) < indicatorSize) {
+  //} else if (dist(base.x, base.y, mouseX, mouseY) < indicatorSize) {
+  } else if (msInLogo) {
     offSetX = mouseX - base.x;
     offSetY = mouseY - base.y;  
     dragBase = true;
@@ -267,7 +285,12 @@ void mouseReleased()
   dragCorner = false;
   
   //check if click next
-  if (success && ((mouseX < 100 && mouseY < 60) || (mouseX < corner.x + 70 && mouseX > corner.x && mouseY > corner.y -indicatorSize-30 && mouseY < corner.y -indicatorSize+5)) )
+  //if (success && ((mouseX < 100 && mouseY < 60) || (mouseX < corner.x + 70 && mouseX > corner.x && mouseY > corner.y -indicatorSize-30 && mouseY < corner.y -indicatorSize+5)) )
+
+  //rectMode(CENTER);
+  //rect(0,0, sideLength, sideLength);
+  
+  if ((mouseX < 100 && mouseY < 60) || (mouseX < corner.x + 70 && mouseX > corner.x && mouseY > corner.y -indicatorSize-30 && mouseY < corner.y -indicatorSize+5))
   {
     if (userDone==false && !checkForSuccess())
       errorCount++;
@@ -279,6 +302,12 @@ void mouseReleased()
       userDone = true;
       finishTime = millis();
     }
+    ready = false;
+  }
+  if (success) {
+    ready = true;
+  } else {
+    ready = false;
   }
 }
 
@@ -296,6 +325,8 @@ public boolean checkForSuccess()
   match += "Close Enough Rotation: " + closeRotation + " (rot dist="+calculateDifferenceBetweenAngles(d.rotation, logoRotation)+")" + d.rotation + ":" + logoRotation + "\n";
   match += ("Close Enough Z: " +  closeZ + " (logo Z = " + d.z + ", destination Z = " + logoZ +")\n");
   match += ("Close enough all: " + (closeDist && closeRotation && closeZ) + "\n");
+  match += "In Logo: " + msInLogo + "\n";
+
   println(match);
 
   return closeDist && closeRotation && closeZ;
