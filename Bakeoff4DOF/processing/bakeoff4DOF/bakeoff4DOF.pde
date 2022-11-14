@@ -37,6 +37,8 @@ boolean closeDist = false;
 boolean closeRotation = false;
 boolean closeZ = false;
 boolean success = false;
+float halfLen = 0;
+float tRotate = 0;
 
 private class Destination
 {
@@ -104,23 +106,21 @@ void draw() {
     if (trialIndex==i) { // if is target
       // draw square
       stroke(255, 0, 0, 192); //set target square always red
+      tRotate = d.rotation;
       rotate(radians(d.rotation)); //rotate around the origin of the destination trial
       rect(0, 0, d.z, d.z);
       
       //draw indicators
       stroke(255, 0, 0, 100); //set indicators more transparent
       // draw corner indicators if there is room (draw after rotate)
+      
       if (d.z > indicatorSize) {
-        float halfLen = d.z/2;
-        circle(halfLen, halfLen, indicatorSize);
-        circle(halfLen, -halfLen, indicatorSize);
-        circle(-halfLen, halfLen, indicatorSize);
-        circle(-halfLen, -halfLen, indicatorSize);
+        halfLen = d.z/2;
       }
       // draw center cross
-      rotate(radians(-d.rotation)); // counter rotate cross to match with logo
-      line(0 - indicatorSize/2, 0, 0 + indicatorSize/2, 0);
-      line(0, 0 - indicatorSize/2, 0, 0 + indicatorSize/2);
+      //rotate(radians(-d.rotation)); // counter rotate cross to match with logo
+      //line(0 - indicatorSize/2, 0, 0 + indicatorSize/2, 0);
+      //line(0, 0 - indicatorSize/2, 0, 0 + indicatorSize/2);
       
     } else { // if not target
       rotate(radians(d.rotation)); //rotate around the origin of the destination trial
@@ -131,7 +131,7 @@ void draw() {
   }
 
   //===========DRAW LOGO SQUARE=================
-  pushMatrix();
+  
 
   // controlls for dragging corners, conditions set in mousePressed() and mouseReleased()
   if (dragBase){
@@ -154,24 +154,20 @@ void draw() {
     if (corner.y > height) {corner.y = height;}
   }
   
-  // set sidelength for drawing logo
-  sideLength = 2 * base.dist(corner) / sqrt(2);
-  
-  // set location of the logo for internal logic
-  logoX = base.x;
-  logoY = base.y;
-  logoZ = sideLength;
-  
-  // draw logo
-  noStroke();
-  fill(60, 60, 192, 150);
-  //rectMode(CORNER);
-  translate(base.x, base.y); //translate draw center to the base corner
-  logoRotation = degrees(atan2(corner.y - base.y, corner.x - base.x) - PI/4); // find angle between base and corner corner
-  rotate(radians(logoRotation)); //rotate using the base corner as the origin
-  rect(0, 0, sideLength, sideLength); // draw square at translated draw center
-  //rectMode(CENTER); // reset rectMode
-  
+  pushMatrix();
+  translate(base.x, base.y);
+  rotate(radians(tRotate));
+  if (halfLen > indicatorSize || true) {
+      if (closeRotation && closeZ) {
+        stroke(0, 255, 0, 250);
+      } else {
+        stroke(100, 100, 100, 250);
+      }
+      circle(halfLen, halfLen, indicatorSize);
+      circle(halfLen, -halfLen, indicatorSize);
+      circle(-halfLen, halfLen, indicatorSize);
+      circle(-halfLen, -halfLen, indicatorSize);
+    }
   popMatrix();
   
   // draw logo indicators
@@ -192,6 +188,27 @@ void draw() {
   line(base.x - indicatorSize/2, base.y, base.x + indicatorSize/2, base.y); // draw center drag crosshair
   line(base.x, base.y - indicatorSize/2, base.x, base.y + indicatorSize/2);
   
+  pushMatrix();
+  // set sidelength for drawing logo
+  sideLength = 2 * base.dist(corner) / sqrt(2);
+  
+  // set location of the logo for internal logic
+  logoX = base.x;
+  logoY = base.y;
+  logoZ = sideLength;
+  
+  // draw logo
+  noStroke();
+  fill(60, 60, 192, 150);
+  //rectMode(CORNER);
+  translate(base.x, base.y); //translate draw center to the base corner
+  logoRotation = degrees(atan2(corner.y - base.y, corner.x - base.x) - PI/4); // find angle between base and corner corner
+  rotate(radians(logoRotation)); //rotate using the base corner as the origin
+  rect(0, 0, sideLength, sideLength); // draw square at translated draw center
+  //rectMode(CENTER); // reset rectMode
+  
+  popMatrix();
+  
   //===========TEXT==================
   noStroke();
   rectMode(CENTER);
@@ -209,7 +226,6 @@ void draw() {
   }
 
   //===========DRAW SUBMIT BUTTONS=================
-  
   rectMode(CORNER);
   if (success) {
     fill(100,200,100,200);
