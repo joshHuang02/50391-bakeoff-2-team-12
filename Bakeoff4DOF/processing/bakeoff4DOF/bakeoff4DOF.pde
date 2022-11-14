@@ -157,11 +157,11 @@ void draw() {
   pushMatrix();
   translate(base.x, base.y);
   rotate(radians(tRotate));
-  if (halfLen > indicatorSize || true) {
+  if (halfLen > indicatorSize) {
       if (closeRotation && closeZ) {
         stroke(0, 255, 0, 250);
       } else {
-        stroke(100, 100, 100, 250);
+        stroke(255, 0, 0, 150);
       }
       circle(halfLen, halfLen, indicatorSize);
       circle(halfLen, -halfLen, indicatorSize);
